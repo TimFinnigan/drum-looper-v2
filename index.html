@@ -72,12 +72,6 @@
             color: #888;
         }
 
-        .bpm-input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
         .bpm-control input {
             width: 80px;
             background: #333;
@@ -94,65 +88,6 @@
         .bpm-control input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
-        }
-
-        .bpm-arrows {
-            display: none;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .bpm-arrow {
-            width: 20px;
-            height: 18px;
-            background: #333;
-            border: none;
-            color: #888;
-            font-size: 10px;
-            cursor: pointer;
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s;
-            line-height: 1;
-            padding: 0;
-        }
-
-        .bpm-arrow:hover {
-            background: #444;
-            color: #fff;
-        }
-
-        .bpm-arrow:active {
-            background: #555;
-        }
-
-        @media (min-width: 701px) {
-            .bpm-arrows {
-                display: flex;
-            }
-        }
-
-        .bpm-control select {
-            width: 80px;
-            background: #333;
-            border: none;
-            color: #fff;
-            padding: 10px 8px;
-            font-size: 1.1rem;
-            text-align: center;
-            border-radius: 4px;
-            -moz-appearance: textfield;
-            cursor: pointer;
-        }
-
-        .settings-row {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
         }
 
         .sequencer-wrapper {
@@ -209,14 +144,6 @@
             gap: 4px;
         }
 
-        .track:first-child .steps {
-            padding-top: 2px;
-        }
-
-        .track:last-child .steps {
-            padding-bottom: 2px;
-        }
-
         .step {
             width: 36px;
             height: 36px;
@@ -264,7 +191,7 @@
 
         @media (max-width: 700px) {
             body {
-                padding: 20px 5px;
+                padding: 20px 10px;
             }
 
             h1 {
@@ -286,43 +213,10 @@
             .download-section {
                 margin-top: 20px;
             }
-
-            .bpm-control input,
-            .bpm-control select {
-                min-height: 44px;
-                font-size: 1rem;
-                padding: 10px 8px;
-                width: 70px;
-            }
-
-            .settings-row {
-                gap: 12px;
-            }
-
-            .sequencer {
-                gap: 4px;
-            }
-
-            .track {
-                gap: 6px;
-            }
-
-            .track-label {
-                width: 55px;
-                min-width: 55px;
-                font-size: 0.7rem;
-                padding-right: 4px;
-            }
         }
 
         button, .step, .track-label {
             touch-action: manipulation;
-        }
-
-        input, select {
-            touch-action: manipulation;
-            -webkit-user-select: text;
-            user-select: text;
         }
     </style>
 </head>
@@ -365,37 +259,21 @@
     </div>
 
     <div class="download-section">
-        <div class="settings-row">
-            <div class="bpm-control">
-                <label for="bpm">BPM</label>
-                <div class="bpm-input-wrapper">
-                    <input type="number" id="bpm" value="120" min="60" max="200" step="1" inputmode="numeric">
-                    <div class="bpm-arrows">
-                        <button class="bpm-arrow" id="bpmUp" type="button">▲</button>
-                        <button class="bpm-arrow" id="bpmDown" type="button">▼</button>
-                    </div>
-                </div>
-            </div>
-            <div class="bpm-control">
-                <label for="steps">Steps</label>
-                <select id="steps">
-                    <option value="8">8</option>
-                    <option value="16" selected>16</option>
-                    <option value="24">24</option>
-                </select>
-            </div>
+        <div class="bpm-control">
+            <label for="bpm">BPM</label>
+            <input type="number" id="bpm" value="120" min="60" max="200">
         </div>
         <button id="downloadBtn">Download WAV</button>
     </div>
 
     <script>
-        let STEPS = 16;
+        const STEPS = 16;
         let audioContext = null;
         let isPlaying = false;
         let currentStep = 0;
         let intervalId = null;
 
-        let pattern = {
+        const pattern = {
             kick: new Array(STEPS).fill(false),
             snare: new Array(STEPS).fill(false),
             hihat: new Array(STEPS).fill(false),
@@ -408,12 +286,6 @@
             kick: false, snare: false, hihat: false, openhat: false,
             eightoh: false, clap: false
         };
-
-        // Detect mobile device
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                   window.innerWidth <= 768;
-        }
 
         function initAudio() {
             if (!audioContext) {
@@ -579,56 +451,21 @@
             }
         }
 
-        function updateSteps(newSteps) {
-            const oldSteps = STEPS;
-            STEPS = newSteps;
-
-            // Update pattern arrays
-            Object.keys(pattern).forEach(track => {
-                const oldPattern = pattern[track].slice();
-                pattern[track] = new Array(STEPS).fill(false);
-                // Copy over existing pattern up to the new length
-                for (let i = 0; i < Math.min(oldSteps, STEPS); i++) {
-                    pattern[track][i] = oldPattern[i];
-                }
-            });
-
-            // Rebuild the sequencer UI
-            createSteps();
-
-            // Reset playback if playing
-            if (isPlaying) {
-                currentStep = currentStep % STEPS;
-            }
-        }
-
         function createSteps() {
             document.querySelectorAll('.track').forEach(track => {
                 const trackName = track.dataset.track;
                 const stepsContainer = track.querySelector('.steps');
                 const label = track.querySelector('.track-label');
 
-                // Clear existing steps
-                stepsContainer.innerHTML = '';
-
-                // Set up mute functionality (only once)
-                if (!label.hasAttribute('data-listener-attached')) {
-                    label.addEventListener('click', () => {
-                        muted[trackName] = !muted[trackName];
-                        track.classList.toggle('muted', muted[trackName]);
-                    });
-                    label.setAttribute('data-listener-attached', 'true');
-                }
+                label.addEventListener('click', () => {
+                    muted[trackName] = !muted[trackName];
+                    track.classList.toggle('muted', muted[trackName]);
+                });
 
                 for (let i = 0; i < STEPS; i++) {
                     const step = document.createElement('button');
                     step.className = 'step';
                     step.dataset.step = i;
-
-                    // Add active class if pattern has this step
-                    if (pattern[trackName][i]) {
-                        step.classList.add('active');
-                    }
 
                     step.addEventListener('click', () => {
                         initAudio();
@@ -940,10 +777,6 @@
             // Clear existing pattern
             Object.keys(pattern).forEach(track => pattern[track].fill(false));
 
-            // Scale patterns based on current step count (patterns are designed for 16 steps)
-            const scale = (index) => Math.floor(index * STEPS / 16);
-            const scalePattern = (arr) => arr.map(scale).filter(i => i < STEPS);
-
             // Kick patterns - always on beat 1, usually on beat 3, with variations
             const kickPatterns = [
                 [0, 8],                    // Basic four-on-floor half
@@ -953,7 +786,7 @@
                 [0, 6, 8, 14],             // Funk style
                 [0, 8, 12, 14],            // Driving
             ];
-            const kickPattern = scalePattern(kickPatterns[Math.floor(Math.random() * kickPatterns.length)]);
+            const kickPattern = kickPatterns[Math.floor(Math.random() * kickPatterns.length)];
             kickPattern.forEach(i => pattern.kick[i] = true);
 
             // Snare patterns - usually on beats 2 and 4
@@ -964,7 +797,7 @@
                 [4, 12, 14],               // With fill
                 [2, 4, 12],                // Offset
             ];
-            const snarePattern = scalePattern(snarePatterns[Math.floor(Math.random() * snarePatterns.length)]);
+            const snarePattern = snarePatterns[Math.floor(Math.random() * snarePatterns.length)];
             snarePattern.forEach(i => pattern.snare[i] = true);
 
             // Hi-hat patterns
@@ -976,7 +809,7 @@
                 [2, 6, 10, 14],                         // Off-beats only
                 [0, 2, 4, 5, 6, 8, 10, 12, 13, 14],    // Busy pattern
             ];
-            const hihatPattern = scalePattern(hihatPatterns[Math.floor(Math.random() * hihatPatterns.length)]);
+            const hihatPattern = hihatPatterns[Math.floor(Math.random() * hihatPatterns.length)];
             hihatPattern.forEach(i => pattern.hihat[i] = true);
 
             // Open hi-hat - sparse, usually before snare or at phrase end
@@ -988,12 +821,10 @@
                 [7],                       // Mid-bar accent
                 [15],                      // End of bar
             ];
-            const openhatPattern = scalePattern(openhatPatterns[Math.floor(Math.random() * openhatPatterns.length)]);
+            const openhatPattern = openhatPatterns[Math.floor(Math.random() * openhatPatterns.length)];
             openhatPattern.forEach(i => {
-                if (i < STEPS) {
-                    pattern.openhat[i] = true;
-                    pattern.hihat[i] = false;  // Remove closed hat where open hat plays
-                }
+                pattern.openhat[i] = true;
+                pattern.hihat[i] = false;  // Remove closed hat where open hat plays
             });
 
             // 808 patterns - sparse, often with kick or on its own for bass
@@ -1005,7 +836,7 @@
                 [0, 10],                   // With anticipation
                 [4, 12],                   // Counter to kick
             ];
-            const eightohPattern = scalePattern(eightohPatterns[Math.floor(Math.random() * eightohPatterns.length)]);
+            const eightohPattern = eightohPatterns[Math.floor(Math.random() * eightohPatterns.length)];
             eightohPattern.forEach(i => pattern.eightoh[i] = true);
 
             // Clap patterns - often doubles or replaces snare
@@ -1016,7 +847,7 @@
                 [12],                      // Just beat 4
                 [4],                       // Just beat 2
             ];
-            const clapPattern = scalePattern(clapPatterns[Math.floor(Math.random() * clapPatterns.length)]);
+            const clapPattern = clapPatterns[Math.floor(Math.random() * clapPatterns.length)];
             clapPattern.forEach(i => pattern.clap[i] = true);
 
             // Update UI
@@ -1041,7 +872,6 @@
         document.getElementById('downloadBtn').addEventListener('click', downloadWav);
 
         const bpmInput = document.getElementById('bpm');
-        const stepsInput = document.getElementById('steps');
 
         function updateBpm() {
             if (isPlaying) {
@@ -1060,37 +890,9 @@
             const newValue = Math.min(200, Math.max(60, parseInt(bpmInput.value) + delta));
             bpmInput.value = newValue;
             updateBpm();
-        }, { passive: false });
-
-        // On mobile, ensure the input is focusable for native picker
-        if (isMobileDevice()) {
-            bpmInput.addEventListener('touchstart', (e) => {
-                bpmInput.focus();
-            });
-        }
-
-        // BPM arrow buttons
-        document.getElementById('bpmUp')?.addEventListener('click', () => {
-            const newValue = Math.min(200, parseInt(bpmInput.value) + 1);
-            bpmInput.value = newValue;
-            updateBpm();
         });
 
-        document.getElementById('bpmDown')?.addEventListener('click', () => {
-            const newValue = Math.max(60, parseInt(bpmInput.value) - 1);
-            bpmInput.value = newValue;
-            updateBpm();
-        });
-
-        stepsInput.addEventListener('change', () => {
-            const newSteps = parseInt(stepsInput.value);
-            updateSteps(newSteps);
-        });
-
-        // Initialize with mobile-appropriate default
-        const defaultSteps = isMobileDevice() ? 8 : 16;
-        stepsInput.value = defaultSteps;
-        updateSteps(defaultSteps);
+        createSteps();
     </script>
 </body>
 </html>
