@@ -73,14 +73,21 @@
         }
 
         .bpm-control input {
-            width: 60px;
+            width: 80px;
             background: #333;
             border: none;
             color: #fff;
-            padding: 8px 12px;
-            font-size: 1rem;
+            padding: 10px 14px;
+            font-size: 1.1rem;
             text-align: center;
             border-radius: 4px;
+            -moz-appearance: textfield;
+        }
+
+        .bpm-control input::-webkit-outer-spin-button,
+        .bpm-control input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .sequencer {
@@ -197,6 +204,7 @@
             <input type="number" id="bpm" value="120" min="60" max="200">
         </div>
         <button id="clearBtn">Clear</button>
+        <button id="randomBtn">Random</button>
     </div>
 
     <div class="beat-marker">
@@ -613,17 +621,100 @@
             });
         }
 
+        function randomizePattern() {
+            // Clear existing pattern
+            Object.keys(pattern).forEach(track => pattern[track].fill(false));
+
+            // Kick patterns - always on beat 1, usually on beat 3, with variations
+            const kickPatterns = [
+                [0, 8],                    // Basic four-on-floor half
+                [0, 6, 8],                 // With pickup
+                [0, 8, 10],                // With off-beat
+                [0, 3, 8, 11],             // Syncopated
+                [0, 6, 8, 14],             // Funk style
+                [0, 8, 12, 14],            // Driving
+            ];
+            const kickPattern = kickPatterns[Math.floor(Math.random() * kickPatterns.length)];
+            kickPattern.forEach(i => pattern.kick[i] = true);
+
+            // Snare patterns - usually on beats 2 and 4
+            const snarePatterns = [
+                [4, 12],                   // Standard backbeat
+                [4, 12],                   // Standard (weighted)
+                [4, 10, 12],               // With ghost note
+                [4, 12, 14],               // With fill
+                [2, 4, 12],                // Offset
+            ];
+            const snarePattern = snarePatterns[Math.floor(Math.random() * snarePatterns.length)];
+            snarePattern.forEach(i => pattern.snare[i] = true);
+
+            // Hi-hat patterns
+            const hihatPatterns = [
+                [0, 2, 4, 6, 8, 10, 12, 14],           // 8th notes
+                [0, 4, 8, 12],                          // Quarter notes
+                [0, 2, 4, 6, 8, 10, 12, 14],           // 8th notes (weighted)
+                [0, 2, 3, 4, 6, 8, 10, 11, 12, 14],    // With 16th accents
+                [2, 6, 10, 14],                         // Off-beats only
+                [0, 2, 4, 5, 6, 8, 10, 12, 13, 14],    // Busy pattern
+            ];
+            const hihatPattern = hihatPatterns[Math.floor(Math.random() * hihatPatterns.length)];
+            hihatPattern.forEach(i => pattern.hihat[i] = true);
+
+            // Open hi-hat - sparse, usually before snare or at phrase end
+            const openhatPatterns = [
+                [],                        // None
+                [3],                       // Before beat 2
+                [11],                      // Before beat 4
+                [3, 11],                   // Before both snares
+                [7],                       // Mid-bar accent
+                [15],                      // End of bar
+            ];
+            const openhatPattern = openhatPatterns[Math.floor(Math.random() * openhatPatterns.length)];
+            openhatPattern.forEach(i => {
+                pattern.openhat[i] = true;
+                pattern.hihat[i] = false;  // Remove closed hat where open hat plays
+            });
+
+            // Update UI
+            document.querySelectorAll('.track').forEach(trackEl => {
+                const trackName = trackEl.dataset.track;
+                trackEl.querySelectorAll('.step').forEach((step, i) => {
+                    step.classList.toggle('active', pattern[trackName][i]);
+                });
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+
         document.getElementById('playBtn').addEventListener('click', togglePlay);
         document.getElementById('clearBtn').addEventListener('click', clearPattern);
+        document.getElementById('randomBtn').addEventListener('click', randomizePattern);
         document.getElementById('downloadBtn').addEventListener('click', downloadWav);
 
-        document.getElementById('bpm').addEventListener('change', () => {
+        const bpmInput = document.getElementById('bpm');
+
+        function updateBpm() {
             if (isPlaying) {
                 clearInterval(intervalId);
-                const bpm = parseInt(document.getElementById('bpm').value);
+                const bpm = parseInt(bpmInput.value);
                 const interval = (60 / bpm / 4) * 1000;
                 intervalId = setInterval(playStep, interval);
             }
+        }
+
+        bpmInput.addEventListener('change', updateBpm);
+
+        bpmInput.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -1 : 1;
+            const newValue = Math.min(200, Math.max(60, parseInt(bpmInput.value) + delta));
+            bpmInput.value = newValue;
+            updateBpm();
         });
 
         createSteps();
