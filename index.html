@@ -449,16 +449,37 @@
         function initAudio() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // iOS Safari workaround: play silent sound to unlock audio
+                const silentBuffer = audioContext.createBuffer(1, 1, 22050);
+                const silentSource = audioContext.createBufferSource();
+                silentSource.buffer = silentBuffer;
+                silentSource.connect(audioContext.destination);
+                silentSource.start(0);
             }
             if (audioContext.state === 'suspended') {
-                audioContext.resume();
+                audioContext.resume().catch(err => console.log('Resume failed:', err));
             }
             return audioContext;
         }
 
-        // Force audio context initialization on any user interaction (important for mobile)
-        document.addEventListener('touchstart', initAudio, { once: false });
-        document.addEventListener('click', initAudio, { once: false });
+        // Force audio context initialization on any user interaction (important for mobile Safari)
+        function unlockAudio() {
+            initAudio();
+            // Try to play a very short silent sound
+            if (audioContext && audioContext.state !== 'running') {
+                const silentBuffer = audioContext.createBuffer(1, 1, 22050);
+                const silentSource = audioContext.createBufferSource();
+                silentSource.buffer = silentBuffer;
+                silentSource.connect(audioContext.destination);
+                silentSource.start(0);
+                audioContext.resume();
+            }
+        }
+        
+        document.addEventListener('touchstart', unlockAudio);
+        document.addEventListener('touchend', unlockAudio);
+        document.addEventListener('click', unlockAudio);
 
         function playKick(time = 0) {
             const osc = audioContext.createOscillator();
@@ -605,6 +626,11 @@
         }
 
         function playSound(track, time = 0) {
+            // Ensure audio context is initialized and running
+            if (!audioContext || audioContext.state === 'suspended') {
+                initAudio();
+            }
+            
             switch(track) {
                 case 'kick': playKick(time); break;
                 case 'snare': playSnare(time); break;
@@ -709,6 +735,14 @@
 
         function togglePlay() {
             initAudio();
+            
+            // Extra resume attempt for iOS Safari
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('Audio context resumed successfully');
+                });
+            }
+            
             isPlaying = !isPlaying;
             const playBtn = document.getElementById('playBtn');
 
