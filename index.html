@@ -438,8 +438,12 @@
 
         // Detect mobile device
         function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                   window.innerWidth <= 768;
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // For responsive layout checks
+        function isNarrowScreen() {
+            return window.innerWidth <= 700;
         }
 
         function initAudio() {
@@ -449,7 +453,12 @@
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
+            return audioContext;
         }
+
+        // Force audio context initialization on any user interaction (important for mobile)
+        document.addEventListener('touchstart', initAudio, { once: false });
+        document.addEventListener('click', initAudio, { once: false });
 
         function playKick(time = 0) {
             const osc = audioContext.createOscillator();
@@ -695,7 +704,7 @@
         }
 
         function getBpm() {
-            return parseInt(window.innerWidth <= 700 ? document.getElementById('bpmSelectMobile').value : document.getElementById('bpm').value);
+            return parseInt(isNarrowScreen() ? document.getElementById('bpmSelectMobile').value : document.getElementById('bpm').value);
         }
 
         function togglePlay() {
