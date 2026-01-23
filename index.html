@@ -72,7 +72,8 @@
             color: #888;
         }
 
-        .bpm-control input {
+        .bpm-control input,
+        .bpm-control select {
             width: 80px;
             background: #333;
             border: none;
@@ -82,12 +83,31 @@
             text-align: center;
             border-radius: 4px;
             -moz-appearance: textfield;
+            cursor: pointer;
+        }
+
+        .bpm-control select {
+            padding: 10px 8px;
         }
 
         .bpm-control input::-webkit-outer-spin-button,
         .bpm-control input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sequencer-wrapper {
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .sequencer {
@@ -104,6 +124,7 @@
 
         .track-label {
             width: 80px;
+            min-width: 80px;
             font-size: 0.75rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -112,6 +133,11 @@
             cursor: pointer;
             transition: color 0.2s;
             user-select: none;
+            position: sticky;
+            left: 0;
+            background: #1a1a1a;
+            z-index: 1;
+            padding-right: 8px;
         }
 
         .track-label:hover {
@@ -161,26 +187,12 @@
         .track[data-track="eightoh"] .step.active { background: #e91e63; }
         .track[data-track="clap"] .step.active { background: #00bcd4; }
 
-        .beat-marker {
-            display: flex;
-            gap: 4px;
-            margin-left: 92px;
-            margin-bottom: 8px;
-        }
-
-        .beat-marker span {
-            width: 36px;
-            text-align: center;
-            font-size: 0.625rem;
-            color: #444;
-        }
-
-        .beat-marker span:nth-child(4n+1) {
-            color: #666;
-        }
-
         .download-section {
             margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
         #downloadBtn {
@@ -192,23 +204,33 @@
         }
 
         @media (max-width: 700px) {
-            .step {
-                width: 28px;
-                height: 28px;
+            body {
+                padding: 20px 10px;
             }
-            .beat-marker span {
-                width: 28px;
+
+            h1 {
+                margin-bottom: 20px;
             }
-            .track-label {
-                width: 60px;
-                font-size: 0.625rem;
+
+            .controls {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 20px;
             }
-            .track {
-                gap: 8px;
+
+            button {
+                padding: 10px 16px;
+                font-size: 0.75rem;
             }
-            .beat-marker {
-                margin-left: 68px;
+
+            .download-section {
+                margin-top: 20px;
             }
+        }
+
+        button, .step, .track-label {
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -217,60 +239,65 @@
 
     <div class="controls">
         <button id="playBtn">Play</button>
-        <div class="bpm-control">
-            <label for="bpm">BPM</label>
-            <input type="number" id="bpm" value="120" min="60" max="200">
-        </div>
         <button id="clearBtn">Clear</button>
         <button id="randomBtn">Random</button>
     </div>
 
-    <div class="beat-marker">
-        <span>1</span><span></span><span></span><span></span>
-        <span>2</span><span></span><span></span><span></span>
-        <span>3</span><span></span><span></span><span></span>
-        <span>4</span><span></span><span></span><span></span>
-    </div>
-
-    <div class="sequencer">
-        <div class="track" data-track="kick">
-            <span class="track-label">Kick</span>
-            <div class="steps"></div>
-        </div>
-        <div class="track" data-track="snare">
-            <span class="track-label">Snare</span>
-            <div class="steps"></div>
-        </div>
-        <div class="track" data-track="hihat">
-            <span class="track-label">Hi-Hat</span>
-            <div class="steps"></div>
-        </div>
-        <div class="track" data-track="openhat">
-            <span class="track-label">Open Hat</span>
-            <div class="steps"></div>
-        </div>
-        <div class="track" data-track="eightoh">
-            <span class="track-label">808</span>
-            <div class="steps"></div>
-        </div>
-        <div class="track" data-track="clap">
-            <span class="track-label">Clap</span>
-            <div class="steps"></div>
+    <div class="sequencer-wrapper">
+        <div class="sequencer">
+            <div class="track" data-track="kick">
+                <span class="track-label">Kick</span>
+                <div class="steps"></div>
+            </div>
+            <div class="track" data-track="snare">
+                <span class="track-label">Snare</span>
+                <div class="steps"></div>
+            </div>
+            <div class="track" data-track="hihat">
+                <span class="track-label">Hi-Hat</span>
+                <div class="steps"></div>
+            </div>
+            <div class="track" data-track="openhat">
+                <span class="track-label">Open Hat</span>
+                <div class="steps"></div>
+            </div>
+            <div class="track" data-track="eightoh">
+                <span class="track-label">808</span>
+                <div class="steps"></div>
+            </div>
+            <div class="track" data-track="clap">
+                <span class="track-label">Clap</span>
+                <div class="steps"></div>
+            </div>
         </div>
     </div>
 
     <div class="download-section">
+        <div class="settings-row">
+            <div class="bpm-control">
+                <label for="bpm">BPM</label>
+                <input type="number" id="bpm" value="120" min="60" max="200">
+            </div>
+            <div class="bpm-control">
+                <label for="steps">Steps</label>
+                <select id="steps">
+                    <option value="8">8</option>
+                    <option value="16" selected>16</option>
+                    <option value="24">24</option>
+                </select>
+            </div>
+        </div>
         <button id="downloadBtn">Download WAV</button>
     </div>
 
     <script>
-        const STEPS = 16;
+        let STEPS = 16;
         let audioContext = null;
         let isPlaying = false;
         let currentStep = 0;
         let intervalId = null;
 
-        const pattern = {
+        let pattern = {
             kick: new Array(STEPS).fill(false),
             snare: new Array(STEPS).fill(false),
             hihat: new Array(STEPS).fill(false),
@@ -283,6 +310,12 @@
             kick: false, snare: false, hihat: false, openhat: false,
             eightoh: false, clap: false
         };
+
+        // Detect mobile device
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+        }
 
         function initAudio() {
             if (!audioContext) {
@@ -448,21 +481,56 @@
             }
         }
 
+        function updateSteps(newSteps) {
+            const oldSteps = STEPS;
+            STEPS = newSteps;
+
+            // Update pattern arrays
+            Object.keys(pattern).forEach(track => {
+                const oldPattern = pattern[track].slice();
+                pattern[track] = new Array(STEPS).fill(false);
+                // Copy over existing pattern up to the new length
+                for (let i = 0; i < Math.min(oldSteps, STEPS); i++) {
+                    pattern[track][i] = oldPattern[i];
+                }
+            });
+
+            // Rebuild the sequencer UI
+            createSteps();
+
+            // Reset playback if playing
+            if (isPlaying) {
+                currentStep = currentStep % STEPS;
+            }
+        }
+
         function createSteps() {
             document.querySelectorAll('.track').forEach(track => {
                 const trackName = track.dataset.track;
                 const stepsContainer = track.querySelector('.steps');
                 const label = track.querySelector('.track-label');
 
-                label.addEventListener('click', () => {
-                    muted[trackName] = !muted[trackName];
-                    track.classList.toggle('muted', muted[trackName]);
-                });
+                // Clear existing steps
+                stepsContainer.innerHTML = '';
+
+                // Set up mute functionality (only once)
+                if (!label.hasAttribute('data-listener-attached')) {
+                    label.addEventListener('click', () => {
+                        muted[trackName] = !muted[trackName];
+                        track.classList.toggle('muted', muted[trackName]);
+                    });
+                    label.setAttribute('data-listener-attached', 'true');
+                }
 
                 for (let i = 0; i < STEPS; i++) {
                     const step = document.createElement('button');
                     step.className = 'step';
                     step.dataset.step = i;
+
+                    // Add active class if pattern has this step
+                    if (pattern[trackName][i]) {
+                        step.classList.add('active');
+                    }
 
                     step.addEventListener('click', () => {
                         initAudio();
@@ -774,6 +842,10 @@
             // Clear existing pattern
             Object.keys(pattern).forEach(track => pattern[track].fill(false));
 
+            // Scale patterns based on current step count (patterns are designed for 16 steps)
+            const scale = (index) => Math.floor(index * STEPS / 16);
+            const scalePattern = (arr) => arr.map(scale).filter(i => i < STEPS);
+
             // Kick patterns - always on beat 1, usually on beat 3, with variations
             const kickPatterns = [
                 [0, 8],                    // Basic four-on-floor half
@@ -783,7 +855,7 @@
                 [0, 6, 8, 14],             // Funk style
                 [0, 8, 12, 14],            // Driving
             ];
-            const kickPattern = kickPatterns[Math.floor(Math.random() * kickPatterns.length)];
+            const kickPattern = scalePattern(kickPatterns[Math.floor(Math.random() * kickPatterns.length)]);
             kickPattern.forEach(i => pattern.kick[i] = true);
 
             // Snare patterns - usually on beats 2 and 4
@@ -794,7 +866,7 @@
                 [4, 12, 14],               // With fill
                 [2, 4, 12],                // Offset
             ];
-            const snarePattern = snarePatterns[Math.floor(Math.random() * snarePatterns.length)];
+            const snarePattern = scalePattern(snarePatterns[Math.floor(Math.random() * snarePatterns.length)]);
             snarePattern.forEach(i => pattern.snare[i] = true);
 
             // Hi-hat patterns
@@ -806,7 +878,7 @@
                 [2, 6, 10, 14],                         // Off-beats only
                 [0, 2, 4, 5, 6, 8, 10, 12, 13, 14],    // Busy pattern
             ];
-            const hihatPattern = hihatPatterns[Math.floor(Math.random() * hihatPatterns.length)];
+            const hihatPattern = scalePattern(hihatPatterns[Math.floor(Math.random() * hihatPatterns.length)]);
             hihatPattern.forEach(i => pattern.hihat[i] = true);
 
             // Open hi-hat - sparse, usually before snare or at phrase end
@@ -818,10 +890,12 @@
                 [7],                       // Mid-bar accent
                 [15],                      // End of bar
             ];
-            const openhatPattern = openhatPatterns[Math.floor(Math.random() * openhatPatterns.length)];
+            const openhatPattern = scalePattern(openhatPatterns[Math.floor(Math.random() * openhatPatterns.length)]);
             openhatPattern.forEach(i => {
-                pattern.openhat[i] = true;
-                pattern.hihat[i] = false;  // Remove closed hat where open hat plays
+                if (i < STEPS) {
+                    pattern.openhat[i] = true;
+                    pattern.hihat[i] = false;  // Remove closed hat where open hat plays
+                }
             });
 
             // 808 patterns - sparse, often with kick or on its own for bass
@@ -833,7 +907,7 @@
                 [0, 10],                   // With anticipation
                 [4, 12],                   // Counter to kick
             ];
-            const eightohPattern = eightohPatterns[Math.floor(Math.random() * eightohPatterns.length)];
+            const eightohPattern = scalePattern(eightohPatterns[Math.floor(Math.random() * eightohPatterns.length)]);
             eightohPattern.forEach(i => pattern.eightoh[i] = true);
 
             // Clap patterns - often doubles or replaces snare
@@ -844,7 +918,7 @@
                 [12],                      // Just beat 4
                 [4],                       // Just beat 2
             ];
-            const clapPattern = clapPatterns[Math.floor(Math.random() * clapPatterns.length)];
+            const clapPattern = scalePattern(clapPatterns[Math.floor(Math.random() * clapPatterns.length)]);
             clapPattern.forEach(i => pattern.clap[i] = true);
 
             // Update UI
@@ -869,6 +943,7 @@
         document.getElementById('downloadBtn').addEventListener('click', downloadWav);
 
         const bpmInput = document.getElementById('bpm');
+        const stepsInput = document.getElementById('steps');
 
         function updateBpm() {
             if (isPlaying) {
@@ -889,7 +964,15 @@
             updateBpm();
         });
 
-        createSteps();
+        stepsInput.addEventListener('change', () => {
+            const newSteps = parseInt(stepsInput.value);
+            updateSteps(newSteps);
+        });
+
+        // Initialize with mobile-appropriate default
+        const defaultSteps = isMobileDevice() ? 8 : 16;
+        stepsInput.value = defaultSteps;
+        updateSteps(defaultSteps);
     </script>
 </body>
 </html>
