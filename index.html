@@ -72,6 +72,12 @@
             color: #888;
         }
 
+        .bpm-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .bpm-control input {
             width: 80px;
             background: #333;
@@ -88,6 +94,44 @@
         .bpm-control input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
+        }
+
+        .bpm-arrows {
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .bpm-arrow {
+            width: 20px;
+            height: 18px;
+            background: #333;
+            border: none;
+            color: #888;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .bpm-arrow:hover {
+            background: #444;
+            color: #fff;
+        }
+
+        .bpm-arrow:active {
+            background: #555;
+        }
+
+        @media (min-width: 701px) {
+            .bpm-arrows {
+                display: flex;
+            }
         }
 
         .bpm-control select {
@@ -309,7 +353,13 @@
         <div class="settings-row">
             <div class="bpm-control">
                 <label for="bpm">BPM</label>
-                <input type="number" id="bpm" value="120" min="60" max="200" step="1" inputmode="numeric">
+                <div class="bpm-input-wrapper">
+                    <input type="number" id="bpm" value="120" min="60" max="200" step="1" inputmode="numeric">
+                    <div class="bpm-arrows">
+                        <button class="bpm-arrow" id="bpmUp" type="button">▲</button>
+                        <button class="bpm-arrow" id="bpmDown" type="button">▼</button>
+                    </div>
+                </div>
             </div>
             <div class="bpm-control">
                 <label for="steps">Steps</label>
@@ -1003,6 +1053,19 @@
                 bpmInput.focus();
             });
         }
+
+        // BPM arrow buttons
+        document.getElementById('bpmUp')?.addEventListener('click', () => {
+            const newValue = Math.min(200, parseInt(bpmInput.value) + 1);
+            bpmInput.value = newValue;
+            updateBpm();
+        });
+
+        document.getElementById('bpmDown')?.addEventListener('click', () => {
+            const newValue = Math.max(60, parseInt(bpmInput.value) - 1);
+            bpmInput.value = newValue;
+            updateBpm();
+        });
 
         stepsInput.addEventListener('change', () => {
             const newSteps = parseInt(stepsInput.value);
