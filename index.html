@@ -107,8 +107,24 @@
             font-size: 0.75rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
-            color: #666;
+            color: #888;
             text-align: right;
+            cursor: pointer;
+            transition: color 0.2s;
+            user-select: none;
+        }
+
+        .track-label:hover {
+            color: #fff;
+        }
+
+        .track.muted .track-label {
+            color: #444;
+            text-decoration: line-through;
+        }
+
+        .track.muted .step.active {
+            opacity: 0.3;
         }
 
         .steps {
@@ -142,6 +158,8 @@
         .track[data-track="snare"] .step.active { background: #f39c12; }
         .track[data-track="hihat"] .step.active { background: #3498db; }
         .track[data-track="openhat"] .step.active { background: #9b59b6; }
+        .track[data-track="eightoh"] .step.active { background: #e91e63; }
+        .track[data-track="clap"] .step.active { background: #00bcd4; }
 
         .beat-marker {
             display: flex;
@@ -231,6 +249,14 @@
             <span class="track-label">Open Hat</span>
             <div class="steps"></div>
         </div>
+        <div class="track" data-track="eightoh">
+            <span class="track-label">808</span>
+            <div class="steps"></div>
+        </div>
+        <div class="track" data-track="clap">
+            <span class="track-label">Clap</span>
+            <div class="steps"></div>
+        </div>
     </div>
 
     <div class="download-section">
@@ -248,7 +274,14 @@
             kick: new Array(STEPS).fill(false),
             snare: new Array(STEPS).fill(false),
             hihat: new Array(STEPS).fill(false),
-            openhat: new Array(STEPS).fill(false)
+            openhat: new Array(STEPS).fill(false),
+            eightoh: new Array(STEPS).fill(false),
+            clap: new Array(STEPS).fill(false)
+        };
+
+        const muted = {
+            kick: false, snare: false, hihat: false, openhat: false,
+            eightoh: false, clap: false
         };
 
         function initAudio() {
@@ -350,12 +383,68 @@
             });
         }
 
+        function play808(time = 0) {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.type = 'sine';
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+
+            // 808 has a longer decay and lower frequency
+            osc.frequency.setValueAtTime(55, audioContext.currentTime + time);
+            osc.frequency.exponentialRampToValueAtTime(30, audioContext.currentTime + time + 0.15);
+
+            gain.gain.setValueAtTime(1.2, audioContext.currentTime + time);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.8);
+
+            osc.start(audioContext.currentTime + time);
+            osc.stop(audioContext.currentTime + time + 0.8);
+        }
+
+        function playClap(time = 0) {
+            // Clap is multiple noise bursts layered
+            const burstCount = 4;
+            const burstSpacing = 0.01;
+
+            for (let i = 0; i < burstCount; i++) {
+                const noise = audioContext.createBufferSource();
+                const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.15, audioContext.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+
+                for (let j = 0; j < noiseBuffer.length; j++) {
+                    output[j] = Math.random() * 2 - 1;
+                }
+
+                noise.buffer = noiseBuffer;
+
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1200;
+                filter.Q.value = 0.5;
+
+                const gain = audioContext.createGain();
+                const startTime = audioContext.currentTime + time + (i * burstSpacing);
+
+                gain.gain.setValueAtTime(0.8, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+
+                noise.start(startTime);
+            }
+        }
+
         function playSound(track, time = 0) {
             switch(track) {
                 case 'kick': playKick(time); break;
                 case 'snare': playSnare(time); break;
                 case 'hihat': playHiHat(time, false); break;
                 case 'openhat': playHiHat(time, true); break;
+                case 'eightoh': play808(time); break;
+                case 'clap': playClap(time); break;
             }
         }
 
@@ -363,6 +452,12 @@
             document.querySelectorAll('.track').forEach(track => {
                 const trackName = track.dataset.track;
                 const stepsContainer = track.querySelector('.steps');
+                const label = track.querySelector('.track-label');
+
+                label.addEventListener('click', () => {
+                    muted[trackName] = !muted[trackName];
+                    track.classList.toggle('muted', muted[trackName]);
+                });
 
                 for (let i = 0; i < STEPS; i++) {
                     const step = document.createElement('button');
@@ -398,7 +493,7 @@
             updatePlayhead();
 
             Object.keys(pattern).forEach(track => {
-                if (pattern[track][currentStep]) {
+                if (pattern[track][currentStep] && !muted[track]) {
                     playSound(track);
                 }
             });
@@ -536,13 +631,67 @@
                 });
             }
 
+            function render808(ctx, time) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.frequency.setValueAtTime(55, time);
+                osc.frequency.exponentialRampToValueAtTime(30, time + 0.15);
+
+                gain.gain.setValueAtTime(1.2, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.8);
+
+                osc.start(time);
+                osc.stop(time + 0.8);
+            }
+
+            function renderClap(ctx, time) {
+                const burstCount = 4;
+                const burstSpacing = 0.01;
+
+                for (let i = 0; i < burstCount; i++) {
+                    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+
+                    for (let j = 0; j < noiseBuffer.length; j++) {
+                        output[j] = Math.random() * 2 - 1;
+                    }
+
+                    const noise = ctx.createBufferSource();
+                    noise.buffer = noiseBuffer;
+
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 1200;
+                    filter.Q.value = 0.5;
+
+                    const gain = ctx.createGain();
+                    const startTime = time + (i * burstSpacing);
+
+                    gain.gain.setValueAtTime(0.8, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    noise.start(startTime);
+                }
+            }
+
             for (let step = 0; step < STEPS; step++) {
                 const time = step * stepDuration;
 
-                if (pattern.kick[step]) renderKick(offlineContext, time);
-                if (pattern.snare[step]) renderSnare(offlineContext, time);
-                if (pattern.hihat[step]) renderHiHat(offlineContext, time, false);
-                if (pattern.openhat[step]) renderHiHat(offlineContext, time, true);
+                if (pattern.kick[step] && !muted.kick) renderKick(offlineContext, time);
+                if (pattern.snare[step] && !muted.snare) renderSnare(offlineContext, time);
+                if (pattern.hihat[step] && !muted.hihat) renderHiHat(offlineContext, time, false);
+                if (pattern.openhat[step] && !muted.openhat) renderHiHat(offlineContext, time, true);
+                if (pattern.eightoh[step] && !muted.eightoh) render808(offlineContext, time);
+                if (pattern.clap[step] && !muted.clap) renderClap(offlineContext, time);
             }
 
             offlineContext.startRendering().then(callback);
@@ -674,6 +823,29 @@
                 pattern.openhat[i] = true;
                 pattern.hihat[i] = false;  // Remove closed hat where open hat plays
             });
+
+            // 808 patterns - sparse, often with kick or on its own for bass
+            const eightohPatterns = [
+                [],                        // None (most common)
+                [],                        // None (weighted)
+                [0],                       // On beat 1
+                [0, 8],                    // On beats 1 and 3
+                [0, 10],                   // With anticipation
+                [4, 12],                   // Counter to kick
+            ];
+            const eightohPattern = eightohPatterns[Math.floor(Math.random() * eightohPatterns.length)];
+            eightohPattern.forEach(i => pattern.eightoh[i] = true);
+
+            // Clap patterns - often doubles or replaces snare
+            const clapPatterns = [
+                [],                        // None
+                [],                        // None (weighted)
+                [4, 12],                   // With snare
+                [12],                      // Just beat 4
+                [4],                       // Just beat 2
+            ];
+            const clapPattern = clapPatterns[Math.floor(Math.random() * clapPatterns.length)];
+            clapPattern.forEach(i => pattern.clap[i] = true);
 
             // Update UI
             document.querySelectorAll('.track').forEach(trackEl => {
