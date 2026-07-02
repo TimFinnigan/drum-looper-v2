@@ -734,10 +734,9 @@
     wavBtn.disabled = true;
 
     const sr = 44100;
-    const tail = 1.2; // seconds for decay tails after last step
     const patternDuration = numCols * stepDuration();
-    const totalSamples = Math.ceil(sr * (patternDuration + tail));
-    const offCtx = new OfflineAudioContext(2, totalSamples, sr);
+    const patternSamples = Math.ceil(sr * patternDuration);
+    const offCtx = new OfflineAudioContext(2, patternSamples, sr);
 
     for (let col = 0; col < numCols; col++) {
       const t = col * stepDuration();
