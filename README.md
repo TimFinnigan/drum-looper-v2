@@ -1,49 +1,32 @@
-# Drum Looper
+# Dream Looper
 
-A modern, browser-based drum machine and sequencer with real-time audio synthesis using the Web Audio API.
+A browser-based loop sequencer tuned for slow, hazy, minimalist dream pop. Everything is synthesized live with the Web Audio API.
 
-## Features
+## Sound
 
-- 🥁 6 drum tracks: Kick, Snare, Hi-Hat, Open Hat, 808, and Clap
-- 🎵 16-step sequencer with visual feedback
-- ⏱️ Adjustable BPM (60-200)
-- 🔇 Individual track muting
-- 🎲 Random pattern generator
-- 💾 Export loops as WAV files
-- ⌨️ Keyboard shortcuts (Space to play/stop)
-- 📱 Responsive design for mobile and desktop
+- Soft, boxy drum machine voices: Kick, Snare, Hat, Rim
+- Melodic tracks that follow the current chord: Bass, Pad (detuned saws, slow attack), Keys (organ with a little vibrato), Bell
+- Slow chord loops (maj7, m7, add9) that advance each pass through the pattern
+- **Mood**: Dream (major) or Haze (minor)
+- **Key**: any of the 12 keys
+- **Haze**: long, dark reverb
+- **Tone**: warm lowpass, from dusky to open
+- A dotted-eighth tape delay on everything
+- Defaults to 78 BPM (range 50 to 140) with a sparse half-time starter pattern
 
-## Usage
+## Controls
 
-Visit the live demo: [https://YOUR_USERNAME.github.io/drum-looper-v2/](https://YOUR_USERNAME.github.io/drum-looper-v2/)
-
-### Controls
-
-- **Click on steps** to activate/deactivate beats
-- **Click track labels** to mute/unmute tracks
-- **Play button** (or Space bar) to start/stop playback
-- **BPM control** to adjust tempo (use mouse wheel or type value)
-- **Random button** to generate a new pattern
-- **Clear button** to reset all steps
-- **Download WAV** to export your loop
-
-## Technologies
-
-- Pure vanilla JavaScript
-- Web Audio API for sound synthesis
-- No external dependencies
-- Single HTML file for easy deployment
+- **Click or drag on steps** to paint notes
+- **Play** (or Space) to start and stop
+- **Random** (or R) generates a new sparse pattern, keeping the same key and mood
+- **Clear** resets all steps
+- **Export** (or E) renders one pass per chord, plus a reverb tail, to a WAV file
+- **Up / Down arrows** change BPM by 5
+- **Steps** switches between 8, 16 and 32 steps
 
 ## Local Development
 
-Simply open `index.html` in a modern web browser. No build process required!
-
-## Browser Compatibility
-
-Works in all modern browsers that support the Web Audio API:
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
+Open `index.html` in a modern browser. No build step and no dependencies.
 
 ## License
 
